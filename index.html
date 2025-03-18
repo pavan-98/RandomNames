@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Name Drop Selector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f0f4f8;
+      margin: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .name {
+      position: absolute;
+      top: -50px;
+      font-size: 20px;
+      opacity: 0;
+      transition: top 2s ease-in, opacity 1s ease;
+      white-space: nowrap;
+    }
+
+    button, input[type=text] {
+      padding: 8px 12px;
+      margin: 5px;
+    }
+
+    #editSection.hidden {
+      display: none;
+    }
+
+    #inputs input {
+      display: block;
+      width: 200px;
+      margin-bottom: 5px;
+    }
+
+    #shareLink {
+      word-wrap: break-word;
+      max-width: 80vw;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    #dropBtn {
+      margin-top: 300px;
+    }
+  </style>
+</head>
+<body>
+
+<button id="dropBtn">Select Name</button>
+<button id="editBtn">Edit Names</button>
+<div id="editSection" class="hidden">
+  <div id="inputs"></div>
+  <button id="addName">Add Name</button>
+  <button id="removeName">Remove Name</button>
+  <button id="saveBtn">Save Names</button>
+  <p>Shareable Link:</p>
+  <div id="shareLink"></div>
+</div>
+
+<script>
+const dropBtn = document.getElementById('dropBtn');
+const editBtn = document.getElementById('editBtn');
+const editSection = document.getElementById('editSection');
+const inputsContainer = document.getElementById('inputs');
+const saveBtn = document.getElementById('saveBtn');
+const addNameBtn = document.getElementById('addName');
+const removeNameBtn = document.getElementById('removeName');
+const shareLinkDiv = document.getElementById('shareLink');
+
+const defaultNames = ["Alice", "Bob", "Charlie", "David", "Eve"];
+let names = [];
+
+function getNamesFromParams() {
+  const params = new URLSearchParams(window.location.search);
+  names = [];
+  for (let i = 1; i <= 8; i++) {
+    const name = params.get('name' + i);
+    if (name) {
+      names.push(name);
+    }
+  }
+  if (names.length === 0) {
+    names = [...defaultNames];
+  }
+  updateInputs();
+}
+
+function updateInputs() {
+  inputsContainer.innerHTML = '';
+  names.forEach((name, idx) => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = name;
+    input.placeholder = `Name ${idx + 1}`;
+    inputsContainer.appendChild(input);
+  });
+}
+
+function updateShareLink() {
+  const url = new URL(window.location.href.split('?')[0]);
+  inputsContainer.querySelectorAll('input').forEach((input, idx) => {
+    url.searchParams.set('name' + (idx + 1), input.value);
+  });
+  shareLinkDiv.textContent = url.href;
+}
+
+addNameBtn.onclick = () => {
+  if (names.length < 8) {
+    names.push(`Name ${names.length + 1}`);
+    updateInputs();
+  }
+};
+
+removeNameBtn.onclick = () => {
+  if (names.length > 1) {
+    names.pop();
+    updateInputs();
+  }
+};
+
+editBtn.onclick = () => {
+  editSection.classList.toggle('hidden');
+  updateInputs();
+};
+
+saveBtn.onclick = () => {
+  names = Array.from(inputsContainer.querySelectorAll('input')).map(input => input.value);
+  updateShareLink();
+  alert('Names updated! You can now share the updated link.');
+};
+
+dropBtn.onclick = () => {
+  document.querySelectorAll('.name').forEach(el => el.remove());
+  const selected = names[Math.floor(Math.random() * names.length)];
+
+  names.forEach((name, idx) => {
+    const div = document.createElement('div');
+    div.className = 'name';
+    div.textContent = name;
+    div.style.left = `${Math.random() * 60 + 20}%`;
+    document.body.appendChild(div);
+
+    setTimeout(() => {
+      div.style.opacity = 1;
+      div.style.top = name === selected ? '50%' : '110%';
+      if (name === selected) {
+        div.style.left = '50%';
+        div.style.transform = 'translate(-50%, -50%) scale(2)';
+        div.style.transition = 'top 2s ease-out, opacity 1s ease, transform 1s ease';
+      }
+    }, idx * 200);
+  });
+};
+
+  window.onload = () => {
+    getNamesFromParams();
+      setTimeout(() => {
+      dropBtn.onclick(); 
+    }, 500);
+  };
+
+</script>
+
+</body>
+</html>
