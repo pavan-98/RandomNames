@@ -21,4 +21,5 @@ Visit the application here: [Random Names Generator](https://pavan-98.github.io/
 Feel free to fork the repository and contribute to enhance the functionality.
 
 
-Note: To use it locally as well made the website into a single file only, you can download and run the file locally with custom names as well
+### Note 
+To use it locally as well made the website into a single file only, you can download and run the file locally with custom names as well.
