@@ -276,6 +276,10 @@
         text-overflow: ellipsis;
       }
 
+      .winner-announcement.persistent {
+        opacity: 1;
+      }
+
       .toast {
         position: fixed;
         bottom: 20px;
@@ -570,25 +574,39 @@
       // Clear animation container and prepare for new animation
       function clearAnimationContainer() {
         return new Promise((resolve) => {
-          // Mark all existing elements for removal
+          // Mark all existing elements for removal EXCEPT the persistent winner announcement
           const existingElements = Array.from(
+            animContainer.querySelectorAll(".name, .confetti")
+          );
+
+          // Also select non-persistent winner announcements
+          const nonPersistentAnnouncements = Array.from(
             animContainer.querySelectorAll(
-              ".name, .confetti, .winner-announcement"
+              ".winner-announcement:not(.persistent)"
             )
           );
 
-          if (existingElements.length === 0) {
+          const elementsToRemove = [
+            ...existingElements,
+            ...nonPersistentAnnouncements,
+          ];
+
+          if (elementsToRemove.length === 0) {
             resolve();
             return;
           }
 
-          existingElements.forEach((element) => {
+          elementsToRemove.forEach((element) => {
             element.classList.add("exit");
           });
 
-          // Remove all elements after exit animation
+          // Remove only the elements marked for exit after animation
           setTimeout(() => {
-            animContainer.innerHTML = "";
+            elementsToRemove.forEach((element) => {
+              if (element.parentNode) {
+                element.parentNode.removeChild(element);
+              }
+            });
             resolve();
           }, 500);
         });
@@ -596,8 +614,16 @@
 
       // Show winner announcement
       function showWinnerAnnouncement() {
+        // First, remove any existing persistent announcements
+        const existingAnnouncement = document.querySelector(
+          ".winner-announcement.persistent"
+        );
+        if (existingAnnouncement) {
+          existingAnnouncement.parentNode.removeChild(existingAnnouncement);
+        }
+
         const announcement = document.createElement("div");
-        announcement.className = "winner-announcement";
+        announcement.className = "winner-announcement persistent";
         announcement.textContent = `Who Goes Next: ${selectedName}`;
         animContainer.appendChild(announcement);
 
@@ -608,19 +634,8 @@
           selectedNameElement.style.opacity = "0";
         }
 
-        setTimeout(() => {
-          announcement.style.opacity = "1";
-        }, 10);
-
-        setTimeout(() => {
-          announcement.style.opacity = "0";
-
-          setTimeout(() => {
-            if (announcement.parentNode) {
-              announcement.parentNode.removeChild(announcement);
-            }
-          }, 500);
-        }, 3000);
+        // The announcement will stay visible thanks to the persistent class
+        // We don't set a timeout to hide it anymore
       }
 
       // Drop animation and select random name
@@ -632,22 +647,61 @@
         dropBtn.textContent = "Selecting...";
         dropBtn.disabled = true;
 
+        // Immediately remove the existing persistent winner announcement
+        const existingAnnouncement = document.querySelector(
+          ".winner-announcement.persistent"
+        );
+        if (existingAnnouncement) {
+          existingAnnouncement.style.opacity = "0";
+          setTimeout(() => {
+            if (existingAnnouncement.parentNode) {
+              existingAnnouncement.parentNode.removeChild(existingAnnouncement);
+            }
+          }, 300);
+        }
+
         // Clear previous animation
         await clearAnimationContainer();
 
-        // Select a random name, avoiding the most recently selected if possible
+        // Improved random selection algorithm to prevent repetition
         let availableNames = [...names];
-        if (previousWinners.length > 0 && availableNames.length > 1) {
+
+        // If we have enough names, try to avoid selecting any from previousWinners
+        if (
+          previousWinners.length > 0 &&
+          availableNames.length > previousWinners.length
+        ) {
+          availableNames = availableNames.filter(
+            (name) => !previousWinners.includes(name)
+          );
+        }
+        // If we don't have enough unique names, at least avoid the most recent one
+        else if (previousWinners.length > 0 && availableNames.length > 1) {
           availableNames = availableNames.filter(
             (name) => name !== previousWinners[previousWinners.length - 1]
           );
         }
+
+        // If all our filtering left us with no names (unlikely but possible), reset to all names except most recent
+        if (availableNames.length === 0 && names.length > 1) {
+          availableNames = names.filter(
+            (name) => name !== previousWinners[previousWinners.length - 1]
+          );
+        }
+
+        // Select a random name from the available names
         selectedName =
           availableNames[Math.floor(Math.random() * availableNames.length)];
+
+        // Add to winner history
         previousWinners.push(selectedName);
 
-        // Limit history to last 3 winners
-        if (previousWinners.length > 3) {
+        // Limit history based on the number of names, but keep at least 3 for very small lists
+        const historySize = Math.max(
+          3,
+          Math.min(Math.floor(names.length * 0.75), names.length - 1)
+        );
+        if (previousWinners.length > historySize) {
           previousWinners.shift();
         }
 
