@@ -1,175 +1,686 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Name Drop Selector</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100vh;
-      background-color: #f0f4f8;
-      margin: 0;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .name {
-      position: absolute;
-      top: -50px;
-      font-size: 20px;
-      opacity: 0;
-      transition: top 2s ease-in, opacity 1s ease;
-      white-space: nowrap;
-    }
-
-    button, input[type=text] {
-      padding: 8px 12px;
-      margin: 5px;
-    }
-
-    #editSection.hidden {
-      display: none;
-    }
-
-    #inputs input {
-      display: block;
-      width: 200px;
-      margin-bottom: 5px;
-    }
-
-    #shareLink {
-      word-wrap: break-word;
-      max-width: 80vw;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    #dropBtn {
-      margin-top: 300px;
-    }
-  </style>
-</head>
-<body>
-
-<button id="dropBtn">Select Name</button>
-<button id="editBtn">Edit Names</button>
-<div id="editSection" class="hidden">
-  <div id="inputs"></div>
-  <button id="addName">Add Name</button>
-  <button id="removeName">Remove Name</button>
-  <button id="saveBtn">Save Names</button>
-  <p>Shareable Link:</p>
-  <div id="shareLink"></div>
-</div>
-
-<script>
-const dropBtn = document.getElementById('dropBtn');
-const editBtn = document.getElementById('editBtn');
-const editSection = document.getElementById('editSection');
-const inputsContainer = document.getElementById('inputs');
-const saveBtn = document.getElementById('saveBtn');
-const addNameBtn = document.getElementById('addName');
-const removeNameBtn = document.getElementById('removeName');
-const shareLinkDiv = document.getElementById('shareLink');
-
-const defaultNames = ["Alice", "Bob", "Charlie", "David", "Eve"];
-let names = [];
-
-function getNamesFromParams() {
-  const params = new URLSearchParams(window.location.search);
-  names = [];
-  for (let i = 1; i <= 8; i++) {
-    const name = params.get('name' + i);
-    if (name) {
-      names.push(name);
-    }
-  }
-  if (names.length === 0) {
-    names = [...defaultNames];
-  }
-  updateInputs();
-}
-
-function updateInputs() {
-  inputsContainer.innerHTML = '';
-  names.forEach((name, idx) => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = name;
-    input.placeholder = `Name ${idx + 1}`;
-    inputsContainer.appendChild(input);
-  });
-}
-
-function updateShareLink() {
-  const url = new URL(window.location.href.split('?')[0]);
-  inputsContainer.querySelectorAll('input').forEach((input, idx) => {
-    url.searchParams.set('name' + (idx + 1), input.value);
-  });
-  shareLinkDiv.textContent = url.href;
-}
-
-addNameBtn.onclick = () => {
-  if (names.length < 8) {
-    names.push(`Name ${names.length + 1}`);
-    updateInputs();
-  }
-};
-
-removeNameBtn.onclick = () => {
-  if (names.length > 1) {
-    names.pop();
-    updateInputs();
-  }
-};
-
-editBtn.onclick = () => {
-  editSection.classList.toggle('hidden');
-  updateInputs();
-};
-
-saveBtn.onclick = () => {
-  names = Array.from(inputsContainer.querySelectorAll('input')).map(input => input.value);
-  updateShareLink();
-  alert('Names updated! You can now share the updated link.');
-};
-
-dropBtn.onclick = () => {
-  document.querySelectorAll('.name').forEach(el => el.remove());
-  const selected = names[Math.floor(Math.random() * names.length)];
-
-  names.forEach((name, idx) => {
-    const div = document.createElement('div');
-    div.className = 'name';
-    div.textContent = name;
-    div.style.left = `${Math.random() * 60 + 20}%`;
-    document.body.appendChild(div);
-
-    setTimeout(() => {
-      div.style.opacity = 1;
-      div.style.top = name === selected ? '50%' : '110%';
-      if (name === selected) {
-        div.style.left = '50%';
-        div.style.transform = 'translate(-50%, -50%) scale(2)';
-        div.style.transition = 'top 2s ease-out, opacity 1s ease, transform 1s ease';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Name Drop Selector</title>
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.freepik.com/512/4922/4922176.png"
+      type="image/x-icon"
+    />
+    <style>
+      :root {
+        --primary-color: #4a6ee0;
+        --secondary-color: #6c7ae0;
+        --background-color: #f8f9fa;
+        --text-color: #333;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
       }
-    }, idx * 200);
-  });
-};
 
-  window.onload = () => {
-    getNamesFromParams();
-      setTimeout(() => {
-      dropBtn.onclick(); 
-    }, 500);
-  };
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-</script>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        padding: 20px;
+        overflow-x: hidden;
+        position: relative;
+      }
 
-</body>
+      .container {
+        max-width: 800px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+      }
+
+      .name {
+        position: absolute;
+        top: -50px;
+        font-size: 22px;
+        opacity: 0;
+        transition: top 2s ease-in, opacity 1s ease, transform 1s ease;
+        white-space: nowrap;
+        font-weight: 500;
+        color: var(--text-color);
+        z-index: 5;
+        pointer-events: none;
+      }
+
+      .name.selected {
+        font-weight: 700;
+        color: var(--primary-color);
+        text-shadow: 0 2px 10px rgba(74, 110, 224, 0.3);
+        z-index: 10;
+      }
+
+      .name.exit {
+        opacity: 0;
+        transform: translateY(100px) scale(0.8);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+      }
+
+      .btn {
+        padding: 10px 18px;
+        margin: 8px;
+        border: none;
+        border-radius: 50px;
+        background-color: var(--primary-color);
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        font-weight: 500;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background-color: var(--secondary-color);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+      }
+
+      .btn-outline:hover {
+        background-color: rgba(74, 110, 224, 0.1);
+      }
+
+      .btn-action {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      #dropBtn {
+        margin-top: 40px;
+        min-width: 180px;
+      }
+
+      #editSection {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 12px;
+        background-color: #f1f5ff;
+        max-width: 400px;
+        width: 100%;
+        transition: var(--transition);
+      }
+
+      #editSection.hidden {
+        display: none;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .input-group input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 15px;
+        transition: var(--transition);
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.2);
+      }
+
+      .input-group button {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-left: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .input-group button:hover {
+        background-color: #c0392b;
+      }
+
+      #shareLink {
+        word-wrap: break-word;
+        max-width: 100%;
+        text-align: center;
+        margin-top: 15px;
+        padding: 12px;
+        background-color: #e9ecef;
+        border-radius: 6px;
+        font-size: 14px;
+        position: relative;
+      }
+
+      .copy-btn {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        background: rgba(0, 0, 0, 0.1);
+        border: none;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .section-header {
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .anim-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        border-radius: 8px;
+        background-color: rgba(74, 110, 224, 0.05);
+      }
+
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        opacity: 0;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .winner-announcement {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--primary-color);
+        opacity: 0;
+        text-align: center;
+        transition: opacity 0.5s ease;
+        z-index: 20;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        min-width: 70%;
+        max-width: 90%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #333;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .toast.show {
+        opacity: 1;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 15px;
+        }
+
+        #editSection {
+          padding: 15px;
+        }
+
+        .btn {
+          padding: 8px 16px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="margin-bottom: 20px; text-align: center">
+        Name Drop Selector
+      </h1>
+
+      <div class="anim-container" id="animContainer"></div>
+
+      <button id="dropBtn" class="btn">Select Random Name</button>
+
+      <div class="button-group">
+        <button id="editBtn" class="btn btn-outline">Edit Names</button>
+      </div>
+
+      <div id="editSection" class="hidden">
+        <h3 class="section-header">Manage Names</h3>
+        <div id="inputs"></div>
+
+        <div class="button-group">
+          <button id="addName" class="btn btn-action">Add Name</button>
+          <button id="saveBtn" class="btn btn-action">Save Names</button>
+        </div>
+
+        <div>
+          <h4 class="section-header" style="margin-top: 20px">
+            Shareable Link
+          </h4>
+          <div id="shareLink">
+            Your link will appear here after saving
+            <button class="copy-btn" id="copyBtn">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const dropBtn = document.getElementById("dropBtn");
+      const editBtn = document.getElementById("editBtn");
+      const editSection = document.getElementById("editSection");
+      const inputsContainer = document.getElementById("inputs");
+      const saveBtn = document.getElementById("saveBtn");
+      const addNameBtn = document.getElementById("addName");
+      const shareLinkDiv = document.getElementById("shareLink");
+      const copyBtn = document.getElementById("copyBtn");
+      const toast = document.getElementById("toast");
+      const animContainer = document.getElementById("animContainer");
+
+      const defaultNames = ["Alice", "Bob", "Charlie", "David", "Eve"];
+      let names = [];
+      let selectedName = null;
+      let isAnimating = false;
+      let previousWinners = [];
+
+      // Show toast notification
+      function showToast(message, duration = 3000) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, duration);
+      }
+
+      // Get names from URL parameters or use defaults
+      function getNamesFromParams() {
+        const params = new URLSearchParams(window.location.search);
+        names = [];
+        for (let i = 1; i <= 20; i++) {
+          const name = params.get("name" + i);
+          if (name) {
+            names.push(name);
+          }
+        }
+        if (names.length === 0) {
+          names = [...defaultNames];
+        }
+        updateInputs();
+      }
+
+      // Update input fields in the edit section
+      function updateInputs() {
+        inputsContainer.innerHTML = "";
+        names.forEach((name, idx) => {
+          const inputGroup = document.createElement("div");
+          inputGroup.className = "input-group";
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = name;
+          input.placeholder = `Name ${idx + 1}`;
+
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "×";
+          removeBtn.title = "Remove this name";
+          removeBtn.onclick = () => {
+            if (names.length > 1) {
+              names.splice(idx, 1);
+              updateInputs();
+            } else {
+              showToast("At least one name is required");
+            }
+          };
+
+          inputGroup.appendChild(input);
+          inputGroup.appendChild(removeBtn);
+          inputsContainer.appendChild(inputGroup);
+        });
+      }
+
+      // Update the shareable link
+      function updateShareLink() {
+        const url = new URL(window.location.href.split("?")[0]);
+        const validNames = Array.from(inputsContainer.querySelectorAll("input"))
+          .map((input) => input.value.trim())
+          .filter((name) => name.length > 0);
+
+        validNames.forEach((name, idx) => {
+          url.searchParams.set("name" + (idx + 1), name);
+        });
+
+        shareLinkDiv.textContent = url.href;
+      }
+
+      // Create confetti effect for the winner
+      function createConfetti() {
+        const colors = [
+          "#4a6ee0",
+          "#6c7ae0",
+          "#e74c3c",
+          "#f1c40f",
+          "#2ecc71",
+          "#9b59b6",
+        ];
+
+        for (let i = 0; i < 100; i++) {
+          const confetti = document.createElement("div");
+          confetti.className = "confetti";
+          confetti.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = `${Math.random() * 100}%`;
+          confetti.style.top = `${Math.random() * 100}%`;
+          confetti.style.width = `${Math.random() * 8 + 5}px`;
+          confetti.style.height = `${Math.random() * 8 + 5}px`;
+          confetti.style.opacity = "0";
+          animContainer.appendChild(confetti);
+
+          // Animate each piece of confetti
+          setTimeout(() => {
+            confetti.style.opacity = "1";
+            confetti.style.transform = `translate(${
+              Math.random() * 200 - 100
+            }px, ${Math.random() * 200 - 100}px) rotate(${
+              Math.random() * 360
+            }deg)`;
+            confetti.style.transition = `transform ${
+              Math.random() * 2 + 2
+            }s ease-out, opacity 0.5s ease-in`;
+
+            setTimeout(() => {
+              confetti.style.opacity = "0";
+            }, 1500);
+
+            setTimeout(() => {
+              if (confetti.parentNode) {
+                confetti.parentNode.removeChild(confetti);
+              }
+            }, 2500);
+          }, Math.random() * 500);
+        }
+      }
+
+      // Add a new name input field
+      addNameBtn.onclick = () => {
+        names.push("");
+        updateInputs();
+        const inputs = inputsContainer.querySelectorAll("input");
+        if (inputs.length > 0) {
+          inputs[inputs.length - 1].focus();
+        }
+      };
+
+      // Toggle edit section visibility
+      editBtn.onclick = () => {
+        editSection.classList.toggle("hidden");
+        if (!editSection.classList.contains("hidden")) {
+          updateInputs();
+          updateShareLink();
+        }
+      };
+
+      // Save names and update shareable link
+      saveBtn.onclick = () => {
+        const inputs = Array.from(inputsContainer.querySelectorAll("input"));
+        const validInputs = inputs.filter(
+          (input) => input.value.trim().length > 0
+        );
+
+        if (validInputs.length === 0) {
+          showToast("Please add at least one name");
+          return;
+        }
+
+        names = validInputs.map((input) => input.value.trim());
+        updateShareLink();
+        showToast("Names saved successfully!");
+
+        // Update URL with new parameters without refreshing
+        const url = new URL(window.location);
+        url.search = "";
+        names.forEach((name, idx) => {
+          url.searchParams.set("name" + (idx + 1), name);
+        });
+        window.history.pushState({}, "", url);
+      };
+
+      // Copy shareable link to clipboard
+      copyBtn.onclick = () => {
+        navigator.clipboard
+          .writeText(shareLinkDiv.textContent)
+          .then(() => {
+            showToast("Link copied to clipboard!");
+          })
+          .catch((err) => {
+            showToast("Failed to copy link: " + err);
+          });
+      };
+
+      // Clear animation container and prepare for new animation
+      function clearAnimationContainer() {
+        return new Promise((resolve) => {
+          // Mark all existing elements for removal
+          const existingElements = Array.from(
+            animContainer.querySelectorAll(
+              ".name, .confetti, .winner-announcement"
+            )
+          );
+
+          if (existingElements.length === 0) {
+            resolve();
+            return;
+          }
+
+          existingElements.forEach((element) => {
+            element.classList.add("exit");
+          });
+
+          // Remove all elements after exit animation
+          setTimeout(() => {
+            animContainer.innerHTML = "";
+            resolve();
+          }, 500);
+        });
+      }
+
+      // Show winner announcement
+      function showWinnerAnnouncement() {
+        const announcement = document.createElement("div");
+        announcement.className = "winner-announcement";
+        announcement.textContent = `Who Goes Next: ${selectedName}`;
+        animContainer.appendChild(announcement);
+
+        // Hide the selected name element when showing the winner announcement
+        const selectedNameElement =
+          animContainer.querySelector(".name.selected");
+        if (selectedNameElement) {
+          selectedNameElement.style.opacity = "0";
+        }
+
+        setTimeout(() => {
+          announcement.style.opacity = "1";
+        }, 10);
+
+        setTimeout(() => {
+          announcement.style.opacity = "0";
+
+          setTimeout(() => {
+            if (announcement.parentNode) {
+              announcement.parentNode.removeChild(announcement);
+            }
+          }, 500);
+        }, 3000);
+      }
+
+      // Drop animation and select random name
+      async function dropNames() {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        // Update button text during animation
+        dropBtn.textContent = "Selecting...";
+        dropBtn.disabled = true;
+
+        // Clear previous animation
+        await clearAnimationContainer();
+
+        // Select a random name, avoiding the most recently selected if possible
+        let availableNames = [...names];
+        if (previousWinners.length > 0 && availableNames.length > 1) {
+          availableNames = availableNames.filter(
+            (name) => name !== previousWinners[previousWinners.length - 1]
+          );
+        }
+        selectedName =
+          availableNames[Math.floor(Math.random() * availableNames.length)];
+        previousWinners.push(selectedName);
+
+        // Limit history to last 3 winners
+        if (previousWinners.length > 3) {
+          previousWinners.shift();
+        }
+
+        // Create all name elements with random positions
+        const nameElements = [];
+        names.forEach((name, idx) => {
+          const div = document.createElement("div");
+          div.className = "name";
+          div.textContent = name;
+          div.style.left = `${Math.random() * 80 + 10}%`;
+          animContainer.appendChild(div);
+          nameElements.push(div);
+
+          // Start animation after a small delay
+          setTimeout(() => {
+            div.style.opacity = "1";
+
+            if (name === selectedName) {
+              div.classList.add("selected");
+              div.style.top = "50%";
+              div.style.left = "50%";
+              div.style.transform = "translate(-50%, -50%) scale(1.8)";
+              div.style.transition =
+                "top 1.5s ease-out, left 1.5s ease-out, opacity 1s ease, transform 1s ease";
+            } else {
+              // Make non-selected names fall out of view faster
+              const randomEndPosition = Math.random() * 150 + 150; // Ensure they go beyond the container
+              div.style.top = `${randomEndPosition}%`;
+              div.style.opacity = "0.7"; // Make them slightly transparent as they fall
+
+              // Remove non-selected names after animation
+              setTimeout(() => {
+                div.style.opacity = "0";
+                div.style.transform = "scale(0.8)";
+              }, 1200);
+            }
+          }, idx * 150); // Increased delay between names for better visual effect
+        });
+
+        // Show confetti and winner announcement after names have fallen
+        setTimeout(() => {
+          // Show confetti effect
+          createConfetti();
+
+          // Show winner announcement
+          showWinnerAnnouncement();
+
+          // After some time, fade out the winner name
+          setTimeout(() => {
+            nameElements.forEach((element) => {
+              element.style.opacity = "0";
+              element.style.transform += " scale(0.8)";
+            });
+
+            // Reset button and animation state
+            dropBtn.textContent = "Select Random Name";
+            dropBtn.disabled = false;
+            isAnimating = false;
+          }, 3500);
+        }, names.length * 150 + 1500);
+      }
+
+      // Set up the drop button
+      dropBtn.onclick = dropNames;
+
+      // Initialize the app
+      window.onload = () => {
+        getNamesFromParams();
+        updateShareLink();
+
+        // Add keyboard shortcut for dropping names (spacebar)
+        document.addEventListener("keydown", (e) => {
+          if (
+            e.code === "Space" &&
+            !isAnimating &&
+            document.activeElement.tagName !== "INPUT"
+          ) {
+            e.preventDefault();
+            dropNames();
+          }
+        });
+
+        // Start with animation if names are available
+        if (names.length > 0) {
+          setTimeout(() => {
+            dropNames();
+          }, 500);
+        }
+      };
+    </script>
+  </body>
 </html>
